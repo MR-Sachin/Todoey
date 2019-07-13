@@ -9,11 +9,27 @@
 import UIKit
 
 class TodoListViewController: UITableViewController {
-    let itemArray = ["first item","second item","third item","fourth item"]
+    
+    
+    var defaults = UserDefaults.standard
+    //var itemArray = [Item]()
+    var itemArray = ["first item","second item","third item","fourth item"]
+    
 
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
+        
+       // var newItem = Item()
+        //newItem.title = "first item"
+        //itemArray.append(<#T##newElement: Item##Item#>)
+        
+        if let items = defaults.array(forKey: "ToDoListArray") as? [String] {
+            itemArray = items
+        }
+        
+        
+        
     }
     
     
@@ -47,17 +63,41 @@ class TodoListViewController: UITableViewController {
         //print(itemArray[indexPath.row])
         
         if tableView.cellForRow(at: indexPath)?.accessoryType == .checkmark {
-            tableView.cellForRow(at: indexPath)?.accessoryType == .none
+            tableView.cellForRow(at: indexPath)?.accessoryType = .none
         }
         else {
-            tableView.cellForRow(at: indexPath)?.accessoryType == .checkmark
+            tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark
         }
         
         tableView.deselectRow(at: indexPath, animated: true)
     }
     
+    // MARK: add new item button
+    @IBAction func addNewItemButton(_ sender: UIBarButtonItem) {
+        
+        var  textField = UITextField()
+        let alert = UIAlertController(title: "Add Todoey New Item", message: "", preferredStyle: .alert)
+
+        let action = UIAlertAction(title: "Add item", style: .default) { (action) in
+            //print("logic are work")
+            self.itemArray.append(textField.text!)
+            
+            self.defaults.setValue(self.itemArray, forKey: "ToDoListArray")
+            
+            self.tableView.reloadData()
+
+        }
+        
+        alert.addTextField { (alertTextField) in
+            alertTextField.placeholder = "Create new item"
+            textField = alertTextField
+        }
+
+        alert.addAction(action)
+        present(alert, animated: true,completion: nil)
+    }
     
-
-
 }
+
+
 
