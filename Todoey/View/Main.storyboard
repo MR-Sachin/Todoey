@@ -32,8 +32,8 @@
                             <outlet property="delegate" destination="4dN-H0-o9a" id="LRM-Ns-m0P"/>
                         </connections>
                     </tableView>
-                    <navigationItem key="navigationItem" title="Todoey" id="GKN-CW-OWa">
-                        <barButtonItem key="rightBarButtonItem" systemItem="add" id="Bef-DD-Cus">
+                    <navigationItem key="navigationItem" title="Todoey" id="GKN-CW-OWa" customClass="Todo">
+                        <barButtonItem key="rightBarButtonItem" systemItem="add" id="Bef-DD-Cus" customClass="ToDoListviewCotroller">
                             <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                             <connections>
                                 <action selector="addNewItemButton:" destination="4dN-H0-o9a" id="00U-lw-iaF"/>
