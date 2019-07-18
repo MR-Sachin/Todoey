@@ -7,12 +7,18 @@
 //
 
 import UIKit
+import CoreData
 
 class TodoListViewController: UITableViewController {
-    
-    
-    var defaults = UserDefaults.standard
+ 
+    //we not using persistiting data saving in plist now we use core data that why not need this line code
+   // let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
+    //var defaults = UserDefaults.standard
     var itemArray = [Item]()
+    
+    //MARK : MOST IMP Code for saving data into careData see notes for vid 18-17 for more detail
+    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+
 //    var itemArray = ["first item","second item","third item","fourth item","fifth item","sixth item","seveth item","eigth item","ninth item","tenth  item","third item","fourth item","fifth item","sixth item","seveth item","eigth item","ninth item","tenth  item"]
     
 
@@ -20,24 +26,28 @@ class TodoListViewController: UITableViewController {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
-       let newItem = Item()
-        newItem.title = "first item"
-        itemArray.append(newItem)
+       print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
+        
+        // searchBar.delegate = self it outlet set when you call delegate mathod its optonal u do same drag and drop storyboard search bar to main v.c
 
-        let newItem2 = Item()
-        newItem2.title = "second item"
-        itemArray.append(newItem2)
-
-        let newItem3 = Item()
-        newItem3.title = "third item"
-        itemArray.append(newItem3)
+        //let newItem = Item()
+//        newItem.title = "first item"
+//        itemArray.append(newItem)
+//
+//        let newItem2 = Item()
+//        newItem2.title = "second item"
+//        itemArray.append(newItem2)
+//
+//        let newItem3 = Item()
+//        newItem3.title = "third item"
+//        itemArray.append(newItem3)
         
         // defaults method save app data while some app interption suppose pause and while phone ring and other cases
         //if let items = defaults.array(forKey: "ToDoListArray") as? [String] {
            // itemArray = items
         //}
-        
-        
+       
+        loadItems()
         
     }
     
@@ -95,6 +105,9 @@ class TodoListViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         //print(itemArray[indexPath.row])
         
+        context.delete(itemArray[indexPath.row])
+        itemArray.remove(at: indexPath.row)
+        
         itemArray[indexPath.row].done = !itemArray[indexPath.row].done
 
 //        this code inshorter way above line
@@ -111,10 +124,13 @@ class TodoListViewController: UITableViewController {
 //        else {
 //            tableView.cellForRow(at: indexPath)?.accessoryType = .checkmark
 //        }
-//
-//        tableView.deselectRow(at: indexPath, animated: true)
         
-        tableView.reloadData()
+        saveItems()
+        tableView.deselectRow(at: indexPath, animated: true)
+        
+        
+        
+        //tableView.reloadData()
       
     }
     
@@ -127,14 +143,21 @@ class TodoListViewController: UITableViewController {
         let action = UIAlertAction(title: "Add item", style: .default) { (action) in
             //print("logic are work")
             
-            let newItem = Item()
+            
+            let newItem = Item(context: self.context)
             newItem.title = textField.text!
+            newItem.done = false
 
             self.itemArray.append(newItem)
-
-            self.defaults.setValue(self.itemArray, forKey: "ToDoListArray")
             
-            self.tableView.reloadData()
+            //saveItems()   not need that bez we save data in manupulation model method
+
+            //self.defaults.setValue(self.itemArray, forKey: "ToDoListArray")
+            
+            
+            
+            //self.tableView.reloadData()   not need tht bez we crate manupulation model method
+            self.saveItems()
 
         }
         
@@ -147,7 +170,69 @@ class TodoListViewController: UITableViewController {
         present(alert, animated: true,completion: nil)
     }
     
+    
+    //MARK: Model Manupulation Method
+    
+    func saveItems() {
+        //let encoder = PropertyListEncoder()
+        do {
+            //let data = try encoder.encode(itemArray)
+            //try data.write(to: dataFilePath!)
+            try context.save()
+        }catch{
+            //print("Encoding item Array, \(error)")
+            print("Error Saving context \(error)")
+        }
+            self.tableView.reloadData()
+    }
+    
+    func loadItems(with request : NSFetchRequest<Item> = Item.fetchRequest()) {
+//        if let data = try? Data(contentsOf: dataFilePath!) {
+//        let decoder = PropertyListDecoder()
+//        do {
+//            itemArray = try decoder.decode([Item].self, from: data)
+//        }catch {
+//            print("error decoding item array \(error) ")
+//            }
+//      }
+        
+        
+        do{
+           itemArray = try context.fetch(request)
+        }catch{
+            print("Error fetching data from context \(error)")
+        }
+        tableView.reloadData()
+    }
+    
+    
 }
+
+// MARK: - Search Bar Method
+extension TodoListViewController : UISearchBarDelegate {
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+         let request : NSFetchRequest<Item> = Item.fetchRequest()
+        //print(searchBar.text!)
+
+        request.predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+        
+        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
+
+        
+         loadItems(with: request)
+    }
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if searchBar.text?.count == 0 {
+            loadItems()
+        
+        DispatchQueue.main.async {
+            searchBar.resignFirstResponder()
+        }
+    }
+    }
+}
+
 
 
 
