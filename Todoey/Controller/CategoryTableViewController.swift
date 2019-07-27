@@ -7,24 +7,31 @@
 //
 
 import UIKit
-import CoreData
+import RealmSwift
 
 class CategoryViewController: UITableViewController {
     
-    var categories = [Category]( )
+    var categories: Results<Category>?
+    var realm = try! Realm()
     
     // cumunicater with presistent data for perform CURD operation
-    var context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    //var context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
     override func viewDidLoad() {
         super.viewDidLoad()
 
+         loadCategories()
+        
+        
+        
         // Uncomment the following line to preserve selection between presentations
         // self.clearsSelectionOnViewWillAppear = false
 
         // Uncomment the following line to display an Edit button in the navigation bar for this view controller.
         // self.navigationItem.rightBarButtonItem = self.editButtonItem
-        loadCategories()
+        
+        
+        
         
     }
 
@@ -32,7 +39,7 @@ class CategoryViewController: UITableViewController {
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         // #warning Incomplete implementation, return the number of rows
-        return categories.count
+        return categories?.count ?? 1
     }
 
     
@@ -45,7 +52,7 @@ class CategoryViewController: UITableViewController {
        // cell.textLabel?.text = category.name
        
         // refacture less code just one line
-          cell.textLabel?.text = categories[indexPath.row].name
+          cell.textLabel?.text = categories?[indexPath.row].name ?? "No Category Added yet"
         
         return cell
     }
@@ -107,7 +114,7 @@ class CategoryViewController: UITableViewController {
         let destinationVC = segue.destination as! TodoListViewController
         
         if let indexPath = tableView.indexPathForSelectedRow {
-            destinationVC.selectedCategory = categories[indexPath.row]
+            destinationVC.selectedCategory = categories?[indexPath.row]
         }
     }
     
@@ -125,13 +132,13 @@ class CategoryViewController: UITableViewController {
             
             //print("logic ar work")
             
-            let newCategory = Category(context: self.context)
+            let newCategory = Category()
             newCategory.name = textField.text!
             
-            self.categories.append(newCategory)
+            
             
             // call save method while add category
-            self.saveCategories()
+            self.save(category: newCategory)
         }
         
         // this alert object of ui aleartcontriller for add text field with place holder and  alertTextfield value grab into new var text field for save in coreDate for show and maniputation work
@@ -148,9 +155,11 @@ class CategoryViewController: UITableViewController {
     }
     
     
-    func saveCategories() {
+    func save(category: Category ) {
         do{
-            try context.save()
+            try realm.write {
+                realm.add(category)
+            }
         }catch{
             print("Category not added \(error)")
         }
@@ -162,14 +171,8 @@ class CategoryViewController: UITableViewController {
     
     func loadCategories() {
         
-        let request : NSFetchRequest<Category> = Category.fetchRequest()
-        
-        do {
-          categories  = try context.fetch(request)
-        }catch{
-            print("load data into category section \(error)")
-        }
-       tableView.reloadData()
+        categories = realm.objects(Category.self)
+  tableView.reloadData()
     }
 
 }
